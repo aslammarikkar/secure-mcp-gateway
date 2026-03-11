@@ -1,5 +1,5 @@
 export {
   getToolByName,
-  TodoTools,
+  registeredTools,
   type ToolDefinition,
 } from "./mcp/tool-registry.js";

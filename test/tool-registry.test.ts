@@ -2,17 +2,14 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { Permission } from "../src/auth/authorization.ts";
-import { getToolByName, TodoTools } from "../src/mcp/tool-registry.ts";
+import { getToolByName, registeredTools } from "../src/mcp/tool-registry.ts";
 
 test("tool registry exposes expected tool names", () => {
   assert.deepEqual(
-    TodoTools.map((tool) => tool.name),
+    registeredTools.map((tool) => tool.name),
     [
-      "add_todo",
-      "list_todos",
-      "complete_todo",
-      "delete_todo",
-      "updateTodoText",
+      "search_knowledge",
+      "get_knowledge_item",
       "get_my_profile",
     ]
   );
@@ -27,7 +24,7 @@ test("tool registry resolves tools by name", () => {
 });
 
 test("every tool declares at least one required permission", () => {
-  for (const tool of TodoTools) {
+  for (const tool of registeredTools) {
     assert.ok(tool.requiredPermissions.length > 0, `${tool.name} must declare permissions`);
   }
 });

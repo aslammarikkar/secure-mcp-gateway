@@ -65,7 +65,7 @@ function buildAuthenticatedUser(payload: JWTPayload): AuthenticatedUser {
         ? UserRole.ADMIN
         : UserRole.USER,
     permissions: isReadOnly
-      ? [Permission.READ_TODOS, Permission.READ_PROFILE, Permission.LIST_TOOLS]
+      ? [Permission.SEARCH_KNOWLEDGE, Permission.READ_PROFILE, Permission.LIST_TOOLS]
       : Object.values(Permission),
     iat: typeof payload.iat === "number" ? payload.iat : undefined,
     exp: typeof payload.exp === "number" ? payload.exp : undefined,

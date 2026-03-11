@@ -48,14 +48,14 @@ This repository is intended to be customized for your own team and environment.
 - RFC 9728 protected resource metadata for MCP client discovery.
 - Request-scoped authorization and permission-aware tool exposure.
 - Secretless On-Behalf-Of flow for downstream Microsoft Graph access in Azure.
-- A minimal example tool set you can replace with your own domain tools and content access patterns.
+- A capability-oriented example tool set with one SharePoint-shaped provider seam you can replace with your own domain integrations.
 
 ## Template Adoption Checklist
 
 Use this checklist when turning the template into a real project:
 
 1. Rename the service and deployment identifiers to match your product or internal platform naming.
-2. Replace the example TODO tools with your real protected tools, content connectors, or downstream APIs.
+2. Replace the example knowledge provider and tools with your real protected tools, content connectors, or downstream APIs.
 3. Tighten the permission model in `src/auth/authorization.ts` so agent capabilities match your actual access boundaries.
 4. Update Entra app registration settings, scopes, pre-authorized clients, and managed identity wiring for your environment.
 5. Set the correct `RESOURCE_SERVER_URL` and deployment environment values for local and Azure use.
@@ -80,8 +80,10 @@ flowchart TD
     GitHub([GitHub Models])
     OpenAI([OpenAI])
     
-    tools["fa:fa-wrench Tools"]
-    db[(sqlite DB)]
+    tools["fa:fa-wrench MCP Tools"]
+    capability[Knowledge Capability]
+    provider[(Example SharePoint Provider)]
+    graphTool[Graph Profile Tool]
 
     user --> hostGroup 
     subgraph hostGroup["MCP Host"]
@@ -95,16 +97,11 @@ flowchart TD
 
     subgraph container["ACA or localhost"]
       serverHttp a@ -.- tools
-      tools b@ -.- add_todo 
-      tools c@ -.- list_todos
-      tools d@ -.- complete_todo
-      tools e@ -.- delete_todo
+      tools b@ -.- capability
+      tools c@ -.- graphTool
     end
 
-    add_todo bb@ --> db
-    list_todos cc@--> db
-    complete_todo dd@ --> db
-    delete_todo ee@ --> db
+    capability bb@ --> provider
 
     %% styles
 
@@ -116,12 +113,7 @@ flowchart TD
     class aaa animate
     class b animate
     class c animate
-    class d animate
-    class e animate
     class bb animate
-    class cc animate
-    class dd animate
-    class ee animate
 
     class container highlight
 ```

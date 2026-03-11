@@ -9,7 +9,7 @@ Use this document when you need to understand what the code does, where to chang
 - Hosts an MCP server over HTTP at `/mcp`.
 - Exposes a health endpoint at `/`.
 - Exposes RFC 9728 OAuth protected resource metadata at `/.well-known/oauth-protected-resource`.
-- Includes placeholder MCP tools for TODO management backed by in-memory SQLite.
+- Includes capability-oriented MCP tools for knowledge retrieval backed by a SharePoint-shaped example provider.
 - Includes a reference implementation of delegated Microsoft Graph access through On-Behalf-Of with the `get_my_profile` tool.
 
 ## Current Security Model
@@ -22,7 +22,7 @@ Request flow:
 2. [src/auth/validateJwt.ts](../src/auth/validateJwt.ts) validates the token against Entra JWKS.
 3. The middleware maps claims into `req.user` and `req.mcpAuth`.
 4. [src/server.ts](../src/server.ts) creates a request-scoped MCP server instance, authorizes tool access, and executes the requested tool.
-5. The placeholder example tools operate on SQLite through [src/db.ts](../src/db.ts).
+5. The example knowledge tools call the capability layer, which delegates backend work to a provider implementation.
 6. `get_my_profile` uses [src/auth/obo.ts](../src/auth/obo.ts) to exchange the incoming token for a Microsoft Graph token, then calls `GET /me`.
 
 Important implementation detail:
@@ -43,12 +43,14 @@ Important implementation detail:
 - [src/config/http-config.ts](../src/config/http-config.ts): Single source of truth for HTTP middleware policy such as allowed origins and rate limiting defaults.
 - [src/tools.ts](../src/tools.ts): Compatibility barrel for the tool layer.
 - [src/mcp/tool-registry.ts](../src/mcp/tool-registry.ts): Tool registry used by the MCP server.
-- [src/mcp/tools/todo-tools.ts](../src/mcp/tools/todo-tools.ts): TODO-related tool implementations.
+- [src/mcp/tools/knowledge-tools.ts](../src/mcp/tools/knowledge-tools.ts): Knowledge-related MCP tool definitions and schemas.
 - [src/mcp/tools/profile-tools.ts](../src/mcp/tools/profile-tools.ts): Graph/OBO-backed profile tool implementations.
+- [src/capabilities/knowledge/knowledge-service.ts](../src/capabilities/knowledge/knowledge-service.ts): Capability layer that sits between MCP tools and provider implementations.
+- [src/capabilities/knowledge/knowledge-provider.ts](../src/capabilities/knowledge/knowledge-provider.ts): Provider interface that future backends should implement.
+- [src/providers/knowledge/sharepoint/sharepoint-knowledge-provider.ts](../src/providers/knowledge/sharepoint/sharepoint-knowledge-provider.ts): SharePoint-shaped example provider shipped with the template.
 - [src/auth/validateJwt.ts](../src/auth/validateJwt.ts): Entra JWT validation and request auth context creation.
 - [src/auth/obo.ts](../src/auth/obo.ts): Managed-identity-based OBO helper for downstream APIs.
 - [src/auth/authorization.ts](../src/auth/authorization.ts): Roles and permissions.
-- [src/db.ts](../src/db.ts): In-memory SQLite operations.
 - [infra/main.bicep](../infra/main.bicep): Subscription-scope deployment and resource group creation.
 - [infra/resources.bicep](../infra/resources.bicep): Container App, managed identity, env vars, registry, monitoring.
 - [azure.yaml](../azure.yaml): `azd` orchestration.
@@ -59,7 +61,7 @@ Important implementation detail:
 Local development:
 
 - Works for the core MCP server and Entra JWT validation.
-- TODO tools work locally because SQLite is in-memory.
+- Knowledge tools work locally because the template ships with an in-process SharePoint-shaped example provider.
 - `get_my_profile` is not expected to work locally in the current design because OBO depends on the Azure managed identity attached to the deployed Container App.
 
 Azure deployment:
@@ -103,8 +105,9 @@ To add a new tool:
 2. Declare its `requiredPermissions` on the tool definition itself.
 3. Add its required permission in [src/auth/authorization.ts](../src/auth/authorization.ts) only if it should not reuse an existing permission.
 4. Export the tool from [src/mcp/tool-registry.ts](../src/mcp/tool-registry.ts).
-5. If the tool needs downstream API access, prefer reusing [src/auth/obo.ts](../src/auth/obo.ts) instead of adding client secrets.
-6. Build and test with `npm run build` and an authenticated MCP request.
+5. If the tool needs backend-specific retrieval logic, put that logic behind a capability/provider seam rather than directly in the tool module.
+6. If the tool needs downstream API access, prefer reusing [src/auth/obo.ts](../src/auth/obo.ts) instead of adding client secrets.
+7. Build and test with `npm run build` and an authenticated MCP request.
 
 To change auth behavior:
 
@@ -117,7 +120,7 @@ To change auth behavior:
 
 For teams adopting this template, the usual replacement order is:
 
-1. Replace the TODO example tools in [src/mcp/tools/todo-tools.ts](../src/mcp/tools/todo-tools.ts).
+1. Replace or extend the example provider in [src/providers/knowledge/sharepoint/sharepoint-knowledge-provider.ts](../src/providers/knowledge/sharepoint/sharepoint-knowledge-provider.ts).
 2. Update roles and permissions in [src/auth/authorization.ts](../src/auth/authorization.ts).
 3. Replace or extend the downstream API behavior in [src/auth/obo.ts](../src/auth/obo.ts) and [src/mcp/tools/profile-tools.ts](../src/mcp/tools/profile-tools.ts) if Microsoft Graph is not your target API.
 4. Rename deployment and telemetry identifiers in [azure.yaml](../azure.yaml) and [src/helpers/otel.ts](../src/helpers/otel.ts).
@@ -137,12 +140,12 @@ If you want to reproduce this setup in another repo or environment, keep these p
 
 ## Maintenance Notes
 
-- The TODO database is intentionally ephemeral. Every restart resets state.
-- The TODO tool set is example functionality. Treat it as scaffolding to replace, not the intended long-term product surface.
+- The shipped SharePoint provider is example functionality. Treat it as scaffolding to replace, not the intended long-term product surface.
 - The server is request-scoped and stateless from the MCP transport perspective.
 - The most likely drift points are documentation, Entra app registration settings, and Bicep environment variable wiring. If behavior changes, update those three areas together.
 - Runtime-facing identifiers now use `secure-mcp-gateway` as the default service name. Replace that if your organization standardizes on a different name.
 - Use `npm test` for the lightweight regression suite that covers the auth config boundary and MCP tool registry.
+- Keep MCP tools capability-oriented and backend adapters provider-oriented so future integrations remain additive instead of leaking backend details into the protocol layer.
 - Keep route composition in [src/app.ts](../src/app.ts) and startup side effects in [src/index.ts](../src/index.ts) so HTTP behavior stays testable.
 - Keep route implementations in small modules under [src/routes](../src/routes) so [src/app.ts](../src/app.ts) remains composition-focused.
 - Keep HTTP middleware policy in [src/config/http-config.ts](../src/config/http-config.ts) and construct middleware through [src/server-middlewares.ts](../src/server-middlewares.ts) rather than hard-coding env access inline.
@@ -158,6 +161,7 @@ If you are new to this repo, read in this order:
 5. [src/config/auth-config.ts](../src/config/auth-config.ts)
 6. [src/server.ts](../src/server.ts)
 7. [src/mcp/tool-registry.ts](../src/mcp/tool-registry.ts)
-8. [src/mcp/tools/todo-tools.ts](../src/mcp/tools/todo-tools.ts)
+8. [src/mcp/tools/knowledge-tools.ts](../src/mcp/tools/knowledge-tools.ts)
 9. [src/mcp/tools/profile-tools.ts](../src/mcp/tools/profile-tools.ts)
-10. [infra/resources.bicep](../infra/resources.bicep)
+10. [src/providers/knowledge/sharepoint/sharepoint-knowledge-provider.ts](../src/providers/knowledge/sharepoint/sharepoint-knowledge-provider.ts)
+11. [infra/resources.bicep](../infra/resources.bicep)

@@ -29,7 +29,7 @@ import {
   markSpanErrorMessage,
   markSpanOk,
 } from "./helpers/tracing.js";
-import { getToolByName, TodoTools, type ToolDefinition } from "./tools.js";
+import { getToolByName, registeredTools, type ToolDefinition } from "./tools.js";
 
 const log = logger("server");
 const JSON_RPC = "2.0";
@@ -202,7 +202,7 @@ export class StreamableHTTPServer {
 
     // Filter tools based on user permissions
     const filterSpan = tracer.startSpan("authorization.filterTools");
-    const allowedTools = TodoTools.filter((tool) => {
+    const allowedTools = registeredTools.filter((tool) => {
       const allowed = tool.requiredPermissions.some((permission) =>
         hasPermission(user, permission)
       );

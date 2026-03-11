@@ -8,10 +8,8 @@ export enum UserRole {
 }
 
 export enum Permission {
-  READ_TODOS = 'read:todos',
-  CREATE_TODOS = 'create:todos',
-  UPDATE_TODOS = 'update:todos',
-  DELETE_TODOS = 'delete:todos',
+  SEARCH_KNOWLEDGE = 'search:knowledge',
+  READ_KNOWLEDGE = 'read:knowledge',
   READ_PROFILE = 'read:profile',
   LIST_TOOLS = 'list:tools',
   CALL_TOOLS = 'call:tools'
@@ -20,24 +18,21 @@ export enum Permission {
 // Role-permission mapping
 const rolePermissions: Record<UserRole, Permission[]> = {
   [UserRole.ADMIN]: [
-    Permission.READ_TODOS,
-    Permission.CREATE_TODOS,
-    Permission.UPDATE_TODOS,
-    Permission.DELETE_TODOS,
+    Permission.SEARCH_KNOWLEDGE,
+    Permission.READ_KNOWLEDGE,
     Permission.READ_PROFILE,
     Permission.LIST_TOOLS,
     Permission.CALL_TOOLS
   ],
   [UserRole.USER]: [
-    Permission.READ_TODOS,
-    Permission.CREATE_TODOS,
-    Permission.UPDATE_TODOS,
+    Permission.SEARCH_KNOWLEDGE,
+    Permission.READ_KNOWLEDGE,
     Permission.READ_PROFILE,
     Permission.LIST_TOOLS,
     Permission.CALL_TOOLS
   ],
   [UserRole.READONLY]: [
-    Permission.READ_TODOS,
+    Permission.SEARCH_KNOWLEDGE,
     Permission.READ_PROFILE,
     Permission.LIST_TOOLS
   ]

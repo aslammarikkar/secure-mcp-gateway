@@ -67,7 +67,7 @@ test("listTools returns only tools allowed for a readonly user", async () => {
   const response = await listToolsHandler();
   const toolNames = response.tools.map((tool: { name: string }) => tool.name).sort();
 
-  assert.deepEqual(toolNames, ["get_my_profile", "list_todos"]);
+  assert.deepEqual(toolNames, ["get_my_profile", "search_knowledge"]);
 });
 
 test("callTool returns an authentication error when no user context exists", async () => {
@@ -78,8 +78,8 @@ test("callTool returns an authentication error when no user context exists", asy
 
   const response = await callToolHandler({
     params: {
-      name: "list_todos",
-      arguments: {},
+      name: "search_knowledge",
+      arguments: { query: "template" },
     },
   });
 
@@ -95,9 +95,9 @@ test("callTool returns a permission error when the user cannot invoke the tool",
 
   const response = await callToolHandler({
     params: {
-      name: "add_todo",
+      name: "get_knowledge_item",
       arguments: {
-        title: "Buy milk",
+        id: "sharepoint-welcome",
       },
     },
   });
@@ -105,7 +105,7 @@ test("callTool returns a permission error when the user cannot invoke the tool",
   assert.equal(response.jsonrpc, "2.0");
   assert.equal(
     response.error.message,
-    "Insufficient permissions to call tool: add_todo"
+    "Insufficient permissions to call tool: get_knowledge_item"
   );
 });
 
@@ -117,15 +117,15 @@ test("callTool executes an allowed tool and returns its result payload", async (
 
   const response = await callToolHandler({
     params: {
-      name: "list_todos",
-      arguments: {},
+      name: "search_knowledge",
+      arguments: { query: "sharepoint" },
     },
   });
 
   assert.equal(response.jsonrpc, "2.0");
   assert.ok(Array.isArray(response.content));
   assert.ok(response.structuredContent);
-  assert.ok(Array.isArray(response.structuredContent.todos));
+  assert.ok(Array.isArray(response.structuredContent.items));
 });
 
 test("setLevel handler emits a notification message", async () => {
