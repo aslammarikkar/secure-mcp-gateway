@@ -71,6 +71,7 @@ Azure deployment:
 - Attaches a user-assigned managed identity to the Container App.
 - Uses that managed identity to obtain the assertion required for OBO.
 - For the SharePoint provider, the app registration also needs delegated Microsoft Graph `Sites.Read.All` plus a federated credential whose subject matches the current Container App managed identity `principalId`.
+- The repo ships a helper command, `npm run sync:sharepoint-auth`, to align those Entra settings after deployment.
 
 ## Required Environment Variables
 
@@ -151,6 +152,7 @@ If you want to reproduce this setup in another repo or environment, keep these p
 - The server is request-scoped and stateless from the MCP transport perspective.
 - The most likely drift points are documentation, Entra app registration settings, and Bicep environment variable wiring. If behavior changes, update those three areas together.
 - Service renames can invalidate app-registration federation. If OBO fails with `AADSTS700213` or `AADSTS70025`, compare the federated credential subject with the current user-assigned managed identity principal id on the Container App.
+- The `sync:sharepoint-auth` helper is intentionally separate from `azd` hooks because not every deploy identity can modify app registrations or grant tenant-wide admin consent.
 - Runtime-facing identifiers now use `secure-mcp-gateway` as the default service name. Replace that if your organization standardizes on a different name.
 - Use `npm test` for the lightweight regression suite that covers the auth config boundary and MCP tool registry.
 - Keep MCP tools capability-oriented and backend adapters provider-oriented so future integrations remain additive instead of leaking backend details into the protocol layer.

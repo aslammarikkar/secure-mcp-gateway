@@ -282,6 +282,27 @@ az ad app permission grant --id <mcp-resource-app-id> \
 az ad app permission admin-consent --id <mcp-resource-app-id>
 ```
 
+Or let the repo align the app registration with the deployed Container App for you:
+
+```bash
+npm run sync:sharepoint-auth
+```
+
+That command will:
+
+1. Resolve the current `secure-mcp-gateway` Container App managed identity.
+2. Ensure Microsoft Graph delegated `Sites.Read.All` is requested on the MCP app registration.
+3. Grant the delegated permission and attempt admin consent.
+4. Replace the `aca-mcp-obo` federated credential so its subject matches the current managed identity `principalId`.
+
+If your signed-in identity cannot grant tenant-wide admin consent, run:
+
+```bash
+npm run sync:sharepoint-auth -- --skip-admin-consent
+```
+
+Then have a tenant admin perform the consent step separately.
+
 
 > [!NOTE]
 > If you were simply testing the deployment, you can remove and clean up all deployed resources by running the following command to avoid incurring any costs:
@@ -389,6 +410,12 @@ Or run the built-in verifier from the repo root:
 
 ```bash
 npm run validate:remote -- sharepoint
+```
+
+To do both steps in sequence:
+
+```bash
+npm run setup:sharepoint
 ```
 
 The verifier will:
