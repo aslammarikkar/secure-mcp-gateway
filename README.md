@@ -16,11 +16,8 @@ urlFragment: secure-mcp-gateway
 -->
 # Secure MCP Gateway Template (Node.js/TypeScript)
 
-<div align="center">
 ![Node version](https://img.shields.io/badge/Node.js->=22-3c873a?style=flat-square)
 [![TypeScript](https://img.shields.io/badge/TypeScript-blue?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
-
-</div>
 
 This repository is a reusable template for building a secure remote Model Context Protocol (MCP) gateway on Azure Container Apps. It is built with Node.js and TypeScript and implements the core patterns from the Azure Container Apps + Entra OAuth 2.1 architecture: RFC 9728 protected resource metadata, JWT validation through JWKS, request-scoped authorization, and On-Behalf-Of flow for downstream Microsoft Graph access.
 
