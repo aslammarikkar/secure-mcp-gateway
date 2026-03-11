@@ -61,7 +61,7 @@ Important implementation detail:
 Local development:
 
 - Works for the core MCP server and Entra JWT validation.
-- Knowledge tools work locally because the template ships with an in-process SharePoint-shaped example provider.
+- Knowledge tools can run in `sample` mode locally, or against real SharePoint content through Microsoft Graph when delegated Graph permissions are configured.
 - `get_my_profile` is not expected to work locally in the current design because OBO depends on the Azure managed identity attached to the deployed Container App.
 
 Azure deployment:
@@ -80,6 +80,11 @@ Application auth settings:
 - `RESOURCE_SERVER_URL`: Base URL of the MCP server, for example `http://localhost:3000` or the ACA URL.
 - `MCP_SCOPE`: Delegated scope required by the API. Default is `access_as_user`.
 - `GRAPH_OBO_SCOPE`: Downstream Graph scope. Default is `https://graph.microsoft.com/User.Read`.
+- `SHAREPOINT_GRAPH_SCOPE`: Delegated Graph scope used for SharePoint retrieval. Default is `https://graph.microsoft.com/Sites.Read.All`.
+
+Template-only override:
+
+- `SHAREPOINT_PROVIDER_MODE`: Use `sample` to keep the shipped example provider local-only and deterministic during smoke testing. Default is `graph`.
 
 Azure-only setting:
 

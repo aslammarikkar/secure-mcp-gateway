@@ -9,6 +9,9 @@ import {
 import { StreamableHTTPServer } from "../src/server.ts";
 
 type RegisteredHandler = (request?: any) => Promise<any>;
+type EnvSnapshot = Partial<Record<string, string | undefined>>;
+
+const ENV_KEYS = ["SHAREPOINT_PROVIDER_MODE"] as const;
 
 type FakeSdkServer = {
   handlers: RegisteredHandler[];
@@ -28,6 +31,21 @@ function createFakeSdkServer(): FakeSdkServer {
       this.notifications.push(payload);
     },
   };
+}
+
+function snapshotEnv(): EnvSnapshot {
+  return Object.fromEntries(ENV_KEYS.map((key) => [key, process.env[key]]));
+}
+
+function restoreEnv(snapshot: EnvSnapshot) {
+  for (const key of ENV_KEYS) {
+    const value = snapshot[key];
+    if (value === undefined) {
+      delete process.env[key];
+    } else {
+      process.env[key] = value;
+    }
+  }
 }
 
 function createUser(role: UserRole, permissions?: Permission[]): AuthenticatedUser {
@@ -59,73 +77,105 @@ function registerHandlers(requestContext: {
 }
 
 test("listTools returns only tools allowed for a readonly user", async () => {
-  const { listToolsHandler } = registerHandlers({
-    user: createUser(UserRole.READONLY),
-    accessToken: "token-readonly",
-  });
+  const snapshot = snapshotEnv();
 
-  const response = await listToolsHandler();
-  const toolNames = response.tools.map((tool: { name: string }) => tool.name).sort();
+  try {
+    process.env.SHAREPOINT_PROVIDER_MODE = "sample";
 
-  assert.deepEqual(toolNames, ["get_my_profile", "search_knowledge"]);
+    const { listToolsHandler } = registerHandlers({
+      user: createUser(UserRole.READONLY),
+      accessToken: "token-readonly",
+    });
+
+    const response = await listToolsHandler();
+    const toolNames = response.tools.map((tool: { name: string }) => tool.name).sort();
+
+    assert.deepEqual(toolNames, ["get_my_profile", "search_knowledge"]);
+  } finally {
+    restoreEnv(snapshot);
+  }
 });
 
 test("callTool returns an authentication error when no user context exists", async () => {
-  const { callToolHandler } = registerHandlers({
-    user: null,
-    accessToken: null,
-  });
+  const snapshot = snapshotEnv();
 
-  const response = await callToolHandler({
-    params: {
-      name: "search_knowledge",
-      arguments: { query: "template" },
-    },
-  });
+  try {
+    process.env.SHAREPOINT_PROVIDER_MODE = "sample";
 
-  assert.equal(response.jsonrpc, "2.0");
-  assert.equal(response.error.message, "Authentication required");
+    const { callToolHandler } = registerHandlers({
+      user: null,
+      accessToken: null,
+    });
+
+    const response = await callToolHandler({
+      params: {
+        name: "search_knowledge",
+        arguments: { query: "template" },
+      },
+    });
+
+    assert.equal(response.jsonrpc, "2.0");
+    assert.equal(response.error.message, "Authentication required");
+  } finally {
+    restoreEnv(snapshot);
+  }
 });
 
 test("callTool returns a permission error when the user cannot invoke the tool", async () => {
-  const { callToolHandler } = registerHandlers({
-    user: createUser(UserRole.READONLY),
-    accessToken: "token-readonly",
-  });
+  const snapshot = snapshotEnv();
 
-  const response = await callToolHandler({
-    params: {
-      name: "get_knowledge_item",
-      arguments: {
-        id: "sharepoint-welcome",
+  try {
+    process.env.SHAREPOINT_PROVIDER_MODE = "sample";
+
+    const { callToolHandler } = registerHandlers({
+      user: createUser(UserRole.READONLY),
+      accessToken: "token-readonly",
+    });
+
+    const response = await callToolHandler({
+      params: {
+        name: "get_knowledge_item",
+        arguments: {
+          id: "https://contoso.sharepoint.com/sites/knowledge/Shared%20Documents/welcome.docx",
+        },
       },
-    },
-  });
+    });
 
-  assert.equal(response.jsonrpc, "2.0");
-  assert.equal(
-    response.error.message,
-    "Insufficient permissions to call tool: get_knowledge_item"
-  );
+    assert.equal(response.jsonrpc, "2.0");
+    assert.equal(
+      response.error.message,
+      "Insufficient permissions to call tool: get_knowledge_item"
+    );
+  } finally {
+    restoreEnv(snapshot);
+  }
 });
 
 test("callTool executes an allowed tool and returns its result payload", async () => {
-  const { callToolHandler } = registerHandlers({
-    user: createUser(UserRole.USER),
-    accessToken: "token-user",
-  });
+  const snapshot = snapshotEnv();
 
-  const response = await callToolHandler({
-    params: {
-      name: "search_knowledge",
-      arguments: { query: "sharepoint" },
-    },
-  });
+  try {
+    process.env.SHAREPOINT_PROVIDER_MODE = "sample";
 
-  assert.equal(response.jsonrpc, "2.0");
-  assert.ok(Array.isArray(response.content));
-  assert.ok(response.structuredContent);
-  assert.ok(Array.isArray(response.structuredContent.items));
+    const { callToolHandler } = registerHandlers({
+      user: createUser(UserRole.USER),
+      accessToken: "token-user",
+    });
+
+    const response = await callToolHandler({
+      params: {
+        name: "search_knowledge",
+        arguments: { query: "sharepoint" },
+      },
+    });
+
+    assert.equal(response.jsonrpc, "2.0");
+    assert.ok(Array.isArray(response.content));
+    assert.ok(response.structuredContent);
+    assert.ok(Array.isArray(response.structuredContent.items));
+  } finally {
+    restoreEnv(snapshot);
+  }
 });
 
 test("setLevel handler emits a notification message", async () => {

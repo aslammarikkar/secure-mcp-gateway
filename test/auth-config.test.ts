@@ -7,6 +7,7 @@ import {
   getProtectedResourceMetadataConfig,
   getProtectedResourceMetadataMissingEnv,
 } from "../src/config/auth-config.ts";
+import { getSharePointConfig } from "../src/config/provider-config.ts";
 
 type EnvSnapshot = Partial<Record<string, string | undefined>>;
 
@@ -17,6 +18,9 @@ const ENV_KEYS = [
   "RESOURCE_SERVER_URL",
   "GRAPH_OBO_SCOPE",
   "AZURE_CLIENT_ID",
+  "SHAREPOINT_PROVIDER_MODE",
+  "SHAREPOINT_GRAPH_SCOPE",
+  "SHAREPOINT_SEARCH_ENTITY_TYPES",
 ] as const;
 
 function snapshotEnv(): EnvSnapshot {
@@ -131,6 +135,42 @@ test("getOAuthConfig throws when required auth env is missing", () => {
 
     assert.throws(() => getOAuthConfig(), {
       message: "TENANT_ID environment variable is required",
+    });
+  } finally {
+    restoreEnv(snapshot);
+  }
+});
+
+test("getSharePointConfig returns graph defaults", () => {
+  const snapshot = snapshotEnv();
+
+  try {
+    delete process.env.SHAREPOINT_PROVIDER_MODE;
+    delete process.env.SHAREPOINT_GRAPH_SCOPE;
+    delete process.env.SHAREPOINT_SEARCH_ENTITY_TYPES;
+
+    assert.deepEqual(getSharePointConfig(), {
+      providerMode: "graph",
+      graphScope: "https://graph.microsoft.com/Sites.Read.All",
+      entityTypes: ["driveItem"],
+    });
+  } finally {
+    restoreEnv(snapshot);
+  }
+});
+
+test("getSharePointConfig parses sample mode and entity types", () => {
+  const snapshot = snapshotEnv();
+
+  try {
+    process.env.SHAREPOINT_PROVIDER_MODE = "sample";
+    process.env.SHAREPOINT_GRAPH_SCOPE = "https://graph.microsoft.com/Files.Read.All";
+    process.env.SHAREPOINT_SEARCH_ENTITY_TYPES = "driveItem,listItem";
+
+    assert.deepEqual(getSharePointConfig(), {
+      providerMode: "sample",
+      graphScope: "https://graph.microsoft.com/Files.Read.All",
+      entityTypes: ["driveItem", "listItem"],
     });
   } finally {
     restoreEnv(snapshot);

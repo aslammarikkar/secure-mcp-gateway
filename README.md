@@ -163,10 +163,14 @@ TENANT_ID=<your-tenant-id>
 MCP_RESOURCE_APP_ID=<your-mcp-api-app-client-id>
 RESOURCE_SERVER_URL=http://localhost:3000
 MCP_SCOPE=access_as_user
+SHAREPOINT_PROVIDER_MODE=sample
 ```
 
 > [!NOTE]
 > The local server validates Microsoft Entra access tokens directly. The old generated JWT path is no longer part of this template.
+
+> [!NOTE]
+> The SharePoint provider defaults to live Microsoft Graph retrieval. Set `SHAREPOINT_PROVIDER_MODE=sample` when you want deterministic local template behavior before wiring real SharePoint delegated permissions.
 
 4. Acquire a token for local testing:
 
