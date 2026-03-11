@@ -8,8 +8,8 @@
       "location": {
         "value": "${AZURE_LOCATION}"
       },
-      "mcpContainerTsExists": {
-        "value": "${SERVICE_MCP_CONTAINER_TS_RESOURCE_EXISTS=false}"
+      "secureMcpGatewayExists": {
+        "value": "${SERVICE_SECURE_MCP_GATEWAY_RESOURCE_EXISTS=false}"
       },
       "principalId": {
         "value": "${AZURE_PRINCIPAL_ID}"

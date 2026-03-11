@@ -16,7 +16,7 @@ param mcpScope string = 'access_as_user'
 param graphOboScope string = 'https://graph.microsoft.com/User.Read'
 
 param mcpServerIngressPort int = 3000
-param mcpContainerTsExists bool
+param secureMcpGatewayExists bool
 
 var abbrs = loadJsonContent('./abbreviations.json')
 var resourceToken = uniqueString(subscription().id, resourceGroup().id, location)
@@ -43,7 +43,7 @@ module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.1' =
     publicNetworkAccess: 'Enabled'
     roleAssignments:[
       {
-        principalId: mcpContainerTsIdentity.outputs.principalId
+        principalId: secureMcpGatewayIdentity.outputs.principalId
         principalType: 'ServicePrincipal'
         roleDefinitionIdOrName: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
       }
@@ -62,26 +62,26 @@ module containerAppsEnvironment 'br/public:avm/res/app/managed-environment:0.4.5
   }
 }
 
-module mcpContainerTsIdentity 'br/public:avm/res/managed-identity/user-assigned-identity:0.2.1' = {
-  name: 'mcpContainerTsidentity'
+module secureMcpGatewayIdentity 'br/public:avm/res/managed-identity/user-assigned-identity:0.2.1' = {
+  name: 'secureMcpGatewayIdentity'
   params: {
-    name: '${abbrs.managedIdentityUserAssignedIdentities}mcpContainerTs-${resourceToken}'
+    name: '${abbrs.managedIdentityUserAssignedIdentities}secureMcpGateway-${resourceToken}'
     location: location
   }
 }
 
-module mcpContainerTsFetchLatestImage './modules/fetch-container-image.bicep' = {
-  name: 'mcpContainerTs-fetch-image'
+module secureMcpGatewayFetchLatestImage './modules/fetch-container-image.bicep' = {
+  name: 'secureMcpGateway-fetch-image'
   params: {
-    exists: mcpContainerTsExists
-    name: 'mcp-container-ts'
+    exists: secureMcpGatewayExists
+    name: 'secure-mcp-gateway'
   }
 }
 
-module mcpContainerTs 'br/public:avm/res/app/container-app:0.16.0' = {
-  name: 'mcpContainerTs'
+module secureMcpGateway 'br/public:avm/res/app/container-app:0.16.0' = {
+  name: 'secureMcpGateway'
   params: {
-    name: 'mcp-container-ts'
+    name: 'secure-mcp-gateway'
     ingressTargetPort: mcpServerIngressPort
     scaleSettings: {
       minReplicas: 1
@@ -89,7 +89,7 @@ module mcpContainerTs 'br/public:avm/res/app/container-app:0.16.0' = {
     }
     containers: [
       {
-        image: mcpContainerTsFetchLatestImage.outputs.?containers[?0].?image ?? 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
+        image: secureMcpGatewayFetchLatestImage.outputs.?containers[?0].?image ?? 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
         name: 'main'
         resources: {
           cpu: json('0.5')
@@ -102,7 +102,7 @@ module mcpContainerTs 'br/public:avm/res/app/container-app:0.16.0' = {
           }
           {
             name: 'AZURE_CLIENT_ID'
-            value: mcpContainerTsIdentity.outputs.clientId
+            value: secureMcpGatewayIdentity.outputs.clientId
           }
           {
             name: 'PORT'
@@ -137,20 +137,20 @@ module mcpContainerTs 'br/public:avm/res/app/container-app:0.16.0' = {
     ]
     managedIdentities:{
       systemAssigned: false
-      userAssignedResourceIds: [mcpContainerTsIdentity.outputs.resourceId]
+      userAssignedResourceIds: [secureMcpGatewayIdentity.outputs.resourceId]
     }
     registries:[
       {
         server: containerRegistry.outputs.loginServer
-        identity: mcpContainerTsIdentity.outputs.resourceId
+        identity: secureMcpGatewayIdentity.outputs.resourceId
       }
     ]
     environmentResourceId: containerAppsEnvironment.outputs.resourceId
     location: location
-    tags: union(tags, { 'azd-service-name': 'mcp-container-ts' })
+    tags: union(tags, { 'azd-service-name': 'secure-mcp-gateway' })
   }
 }
 
 output AZURE_CONTAINER_REGISTRY_ENDPOINT string = containerRegistry.outputs.loginServer
-output AZURE_RESOURCE_MCP_CONTAINER_TS_ID string = mcpContainerTs.outputs.resourceId
+output AZURE_RESOURCE_SECURE_MCP_GATEWAY_ID string = secureMcpGateway.outputs.resourceId
 output APPLICATIONINSIGHTS_CONNECTION_STRING string = monitoring.outputs.applicationInsightsConnectionString

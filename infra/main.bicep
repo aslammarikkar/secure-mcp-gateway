@@ -25,7 +25,7 @@ param graphOboScope string = 'https://graph.microsoft.com/User.Read'
 
 param mcpServerIngressPort int = 3000
 
-param mcpContainerTsExists bool
+param secureMcpGatewayExists bool
 
 // Tags that should be applied to all resources.
 // 
@@ -49,7 +49,7 @@ module resources 'resources.bicep' = {
   params: {
     location: location
     tags: resourceTags
-    mcpContainerTsExists: mcpContainerTsExists
+    secureMcpGatewayExists: secureMcpGatewayExists
     mcpServerIngressPort: mcpServerIngressPort
     resourceServerUrl: resourceServerUrl
     tenantId: tenantId
@@ -63,5 +63,5 @@ module resources 'resources.bicep' = {
 //    OUTPUT
 // ------------------
 output AZURE_CONTAINER_REGISTRY_ENDPOINT string = resources.outputs.AZURE_CONTAINER_REGISTRY_ENDPOINT
-output AZURE_RESOURCE_MCP_CONTAINER_TS_ID string = resources.outputs.AZURE_RESOURCE_MCP_CONTAINER_TS_ID
+output AZURE_RESOURCE_SECURE_MCP_GATEWAY_ID string = resources.outputs.AZURE_RESOURCE_SECURE_MCP_GATEWAY_ID
 output APPLICATIONINSIGHTS_CONNECTION_STRING string = resources.outputs.APPLICATIONINSIGHTS_CONNECTION_STRING

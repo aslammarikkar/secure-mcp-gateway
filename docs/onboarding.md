@@ -113,6 +113,16 @@ To change auth behavior:
 3. Keep request-scoped auth data in the Express request object, not global state.
 4. Avoid reintroducing local demo tokens or parallel auth paths unless there is a concrete need, because they increase drift and documentation cost.
 
+## First Customization Targets
+
+For teams adopting this template, the usual replacement order is:
+
+1. Replace the TODO example tools in [src/mcp/tools/todo-tools.ts](../src/mcp/tools/todo-tools.ts).
+2. Update roles and permissions in [src/auth/authorization.ts](../src/auth/authorization.ts).
+3. Replace or extend the downstream API behavior in [src/auth/obo.ts](../src/auth/obo.ts) and [src/mcp/tools/profile-tools.ts](../src/mcp/tools/profile-tools.ts) if Microsoft Graph is not your target API.
+4. Rename deployment and telemetry identifiers in [azure.yaml](../azure.yaml) and [src/helpers/otel.ts](../src/helpers/otel.ts).
+5. Revisit environment defaults and protected resource metadata wiring before the first production deployment.
+
 ## Replication Checklist
 
 If you want to reproduce this setup in another repo or environment, keep these pieces together:

@@ -50,6 +50,19 @@ This repository is intended to be customized for your own team and environment.
 - Secretless On-Behalf-Of flow for downstream Microsoft Graph access in Azure.
 - A minimal example tool set you can replace with your own domain tools and content access patterns.
 
+## Template Adoption Checklist
+
+Use this checklist when turning the template into a real project:
+
+1. Rename the service and deployment identifiers to match your product or internal platform naming.
+2. Replace the example TODO tools with your real protected tools, content connectors, or downstream APIs.
+3. Tighten the permission model in `src/auth/authorization.ts` so agent capabilities match your actual access boundaries.
+4. Update Entra app registration settings, scopes, pre-authorized clients, and managed identity wiring for your environment.
+5. Set the correct `RESOURCE_SERVER_URL` and deployment environment values for local and Azure use.
+6. Review telemetry names, rate limits, timeout policy, and logging defaults before production deployment.
+7. Extend the regression suite before adding new tools so auth and permission behavior stays protected during customization.
+8. Validate the protected resource metadata and authenticated `/mcp` path end to end after any auth or infra change.
+
 
 ## What is MCP?
 The Model Context Protocol (MCP) is an open protocol that allows Large Language Models (LLMs) to interact with external tools and services in a standardized way. MCP enables LLMs to access and utilize various resources, such as databases, APIs, and other services, to enhance their capabilities and provide more accurate and relevant responses.
