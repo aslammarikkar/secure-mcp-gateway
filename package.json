@@ -7,6 +7,7 @@
     "start": "cross-env NODE_ENV='production' tsx src/index.ts",
     "host": "cross-env NODE_ENV='development' tsx --watch src/host.ts",
     "tunnel": "tsx scripts/tunnel.ts",
+    "validate:remote": "tsx scripts/validate-remote.ts",
     "build": "tsc",
     "test": "node --import tsx --test test/**/*.test.ts",
     "dev": "cross-env NODE_ENV='development' tsx watch src/index.ts",

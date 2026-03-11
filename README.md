@@ -385,6 +385,19 @@ az account get-access-token --resource api://<your-mcp-api-app-client-id> --quer
 }
 ```
 
+Or run the built-in verifier from the repo root:
+
+```bash
+npm run validate:remote -- sharepoint
+```
+
+The verifier will:
+
+1. Acquire an MCP API access token with Azure CLI unless `ACCESS_TOKEN` is already set.
+2. Call `tools/list` on the remote endpoint.
+3. Call `search_knowledge` with the supplied query.
+4. Call `get_knowledge_item` for the first returned item unless you pass an explicit item URL as a second argument.
+
 
 ### Option 2 - Manually Adding MCP Server to VS Code
 
