@@ -254,6 +254,34 @@ https://<env-name>.<container-id>.<region>.azurecontainerapps.io
 
 6. If you want to use the `get_my_profile` tool, configure your Entra app registration to trust the Container App managed identity through a federated credential and grant Microsoft Graph delegated permission such as `User.Read`.
 
+7. If you want to use the SharePoint-backed knowledge tools against real tenant data, also configure Microsoft Graph delegated `Sites.Read.All` on the same app registration and grant admin consent.
+
+### Entra setup for the SharePoint provider
+
+For the Graph-backed SharePoint provider path, the app registration and the Container App identity must line up exactly:
+
+1. Add delegated Microsoft Graph permission `Sites.Read.All` to the MCP API app registration.
+2. Grant admin consent after adding the permission.
+3. Create a federated credential on the app registration with:
+   - Issuer: `https://login.microsoftonline.com/<tenant-id>/v2.0`
+   - Audience: `api://AzureADTokenExchange`
+   - Subject: the current user-assigned managed identity `principalId` attached to the Container App
+4. If you rename the service or rotate identities, update the federated credential subject to the new managed identity principal id. A stale subject will break OBO with `AADSTS700213` or `AADSTS70025`.
+
+Example Azure CLI flow:
+
+```bash
+az ad app permission add --id <mcp-resource-app-id> \
+  --api 00000003-0000-0000-c000-000000000000 \
+  --api-permissions 205e70e5-aba6-4c52-a976-6d2d46c48043=Scope
+
+az ad app permission grant --id <mcp-resource-app-id> \
+  --api 00000003-0000-0000-c000-000000000000 \
+  --scope Sites.Read.All
+
+az ad app permission admin-consent --id <mcp-resource-app-id>
+```
+
 
 > [!NOTE]
 > If you were simply testing the deployment, you can remove and clean up all deployed resources by running the following command to avoid incurring any costs:
@@ -312,6 +340,50 @@ az account get-access-token --resource api://<your-mcp-api-app-client-id> --quer
 
 > [!NOTE]
 > Remote MCP requests should send `Accept: application/json, text/event-stream`. When invoking the endpoint manually, also send `mcp-protocol-version: 2025-06-18`.
+
+### Validate the live SharePoint path
+
+After deployment and Entra configuration, verify the remote MCP server in this order:
+
+```bash
+# Acquire a token for the MCP API
+az account get-access-token --resource api://<your-mcp-api-app-client-id> --query accessToken -o tsv
+
+# List tools
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/list",
+  "params": {}
+}
+
+# Search SharePoint-backed knowledge
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/call",
+  "params": {
+    "name": "search_knowledge",
+    "arguments": {
+      "query": "sharepoint",
+      "limit": 3
+    }
+  }
+}
+
+# Fetch one returned SharePoint item by URL
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "method": "tools/call",
+  "params": {
+    "name": "get_knowledge_item",
+    "arguments": {
+      "id": "https://<tenant>.sharepoint.com/sites/<site>/Shared Documents/<item>"
+    }
+  }
+}
+```
 
 
 ### Option 2 - Manually Adding MCP Server to VS Code

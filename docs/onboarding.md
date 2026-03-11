@@ -70,6 +70,7 @@ Azure deployment:
 - Injects the Entra and resource settings through Bicep.
 - Attaches a user-assigned managed identity to the Container App.
 - Uses that managed identity to obtain the assertion required for OBO.
+- For the SharePoint provider, the app registration also needs delegated Microsoft Graph `Sites.Read.All` plus a federated credential whose subject matches the current Container App managed identity `principalId`.
 
 ## Required Environment Variables
 
@@ -142,12 +143,14 @@ If you want to reproduce this setup in another repo or environment, keep these p
 5. A managed identity attached to the workload.
 6. A federated credential on the app registration trusting that managed identity for `api://AzureADTokenExchange`.
 7. Delegated Microsoft Graph permission like `User.Read`, with admin consent when required.
+8. For SharePoint retrieval through Graph, delegated Microsoft Graph `Sites.Read.All` with consent, plus a federated credential subject that matches the active managed identity principal id for the deployed Container App.
 
 ## Maintenance Notes
 
 - The shipped SharePoint provider is example functionality. Treat it as scaffolding to replace, not the intended long-term product surface.
 - The server is request-scoped and stateless from the MCP transport perspective.
 - The most likely drift points are documentation, Entra app registration settings, and Bicep environment variable wiring. If behavior changes, update those three areas together.
+- Service renames can invalidate app-registration federation. If OBO fails with `AADSTS700213` or `AADSTS70025`, compare the federated credential subject with the current user-assigned managed identity principal id on the Container App.
 - Runtime-facing identifiers now use `secure-mcp-gateway` as the default service name. Replace that if your organization standardizes on a different name.
 - Use `npm test` for the lightweight regression suite that covers the auth config boundary and MCP tool registry.
 - Keep MCP tools capability-oriented and backend adapters provider-oriented so future integrations remain additive instead of leaking backend details into the protocol layer.
