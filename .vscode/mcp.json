@@ -1,0 +1,26 @@
+{
+	"servers": {
+		"mcp-server-remote": {
+			"type": "http",
+			"url": "https://<env-name>.<container-id>.<region>.azurecontainerapps.io/mcp",
+			"headers": {
+				"Authorization": "Bearer ${input:ACCESS_TOKEN}"
+			}
+		},
+		"mcp-server": {
+			"type": "http",
+			"url": "http://localhost:3000/mcp",
+			"headers": {
+				"Authorization": "Bearer ${input:ACCESS_TOKEN}"
+			}
+		}
+	},
+	"inputs": [
+		{
+			"password": true,
+			"id": "ACCESS_TOKEN",
+			"description": "Enter the Bearer access token for the MCP server",
+			"type": "promptString"
+		}
+	]
+}
