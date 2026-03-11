@@ -26,6 +26,14 @@ This repository is a reusable template for building a secure remote Model Contex
 
 If you are onboarding to this repository, start with [docs/onboarding.md](docs/onboarding.md) for the current architecture, request flow, and extension points.
 
+## Attribution
+
+This project began as an adaptation of the Microsoft `Azure-Samples/mcp-container-ts` repository and has since been substantially refactored for this secure MCP gateway template and its target use cases.
+
+- Original source: https://github.com/Azure-Samples/mcp-container-ts
+- Current repository: https://github.com/aslammarikkar/secure-mcp-gateway.git
+- See [NOTICE.md](NOTICE.md) for attribution details.
+
 ## Repository Ownership
 
 This repository is intended to be customized for your own team and environment.

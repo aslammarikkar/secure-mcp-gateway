@@ -25,7 +25,7 @@
     "opentelemetry",
     "tracing"
   ],
-  "license": "UNLICENSED",
+  "license": "MIT",
   "description": "An MCP server that uses Microsoft Entra ID authentication with Streamable HTTP and communicates with a local sqlite database.",
   "dependencies": {
     "@azure/identity": "^4.12.0",
